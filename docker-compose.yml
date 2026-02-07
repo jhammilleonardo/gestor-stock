@@ -1,0 +1,49 @@
+# Versión de la especificación de Docker Compose
+version: '3.8'
+
+# Definición de los servicios (contenedores) que componen la aplicación
+services:
+  # Servicio de Base de Datos
+  db:
+    # Imagen oficial de PostgreSQL (versión 15 sobre Alpine Linux, que es más ligera)
+    image: postgres:15-alpine
+    # Nombre personalizado para identificar el contenedor fácilmente
+    container_name: gestor_db
+    # Política de reinicio: se reinicia automáticamente si falla o si se reinicia Docker
+    restart: always
+    # Variables de entorno para configurar la base de datos al iniciar
+    environment:
+      POSTGRES_USER: admin # Usuario root de la DB
+      POSTGRES_PASSWORD: root # Contraseña del usuario
+      POSTGRES_DB: inventario # Nombre de la base de datos que se creará por defecto
+    # Mapeo de puertos: "puerto_host:puerto_contenedor"
+    # Permite acceder a la DB desde tu PC en el puerto 5432
+    ports:
+      - "5432:5432"
+    # Persistencia de datos: Evita que la DB se borre al eliminar el contenedor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Servicio de Administración (Interfaz Web para la DB)
+  pgadmin:
+    # Imagen oficial de pgAdmin 4
+    image: dpage/pgadmin4
+    container_name: gestor_pgadmin
+    # Credenciales para entrar al panel web de pgAdmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gestor.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    # Mapeo de puerto: Accederás vía http://localhost:8080 en tu navegador
+    ports:
+      - "8080:80"
+    # Persistencia para pgAdmin: Guarda tus conexiones configuradas y preferencias
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    # Indica que este servicio depende de la base de datos (se inicia después)
+    depends_on:
+      - db
+
+# Definición de volúmenes compartidos (espacio en disco persistente)
+volumes:
+  postgres_data: # Volumen para los archivos de la base de datos
+  pgadmin_data: # Volumen para las configuraciones de pgAdmin
